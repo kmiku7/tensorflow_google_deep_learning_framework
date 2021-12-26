@@ -2,7 +2,7 @@ import tensorflow as tf
 
 # q = tf.FIFOQueue(2, "int32")
 q = tf.RandomShuffleQueue(2, dtypes='int32', min_after_dequeue=0)
-init = q.enqueue_many(([0,10],))
+init = q.enqueue_many(([0, 10], ))
 
 x = q.dequeue()
 y = x + 1
