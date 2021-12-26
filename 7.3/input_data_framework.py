@@ -41,9 +41,44 @@ image_batch, label_batch = tf.train.shuffle_batch(
     min_after_dequeue=min_after_dequeue,
 )
 
+
+def inference(input_tensor, weights1, biases1, weights2, biases2):
+    layer1 = tf.nn.relu(tf.matmul(input_tensor, weights1) + biases1)
+    return tf.matmul(layer1, weights2) + biases2
+
+
+def calc_loss(image_batch, label_batch):
+    INPUT_NODE = 784
+    OUTPUT_NODE = 10
+    LAYER1_NODE = 500
+    REGULARAZTION_RATE = 0.0001
+
+    weights1 = tf.Variable(
+        tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
+    biases1 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
+
+    weights2 = tf.Variable(
+        tf.truncated_normal([LAYER1_NODE, OUTPUT_NODE], stddev=0.1))
+    biases2 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
+
+    y = inference(image_batch, weights1, biases1, weights2, biases2)
+
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
+        logits=y,
+        labels=label_batch,
+    )
+    cross_entropy_mean = tf.reduce_mean(cross_entropy)
+
+    regularizer = tf.contrib.layers.l2_regularizer(REGULARAZTION_RATE)
+    regularaztion = regularizer(weights1) + regularizer(weights2)
+    loss = cross_entropy_mean + regularaztion
+
+    return loss
+
+
 learning_rate = 0.01
-logit = inference(image_batch)  # noqa: F821
-loss = calc_loss(logit, label_batch)  # noqa: F821
+# logit = inference(image_batch)  # noqa: F821
+loss = calc_loss(image_batch, label_batch)  # noqa: F821
 train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
 
 with tf.Session() as sess:
